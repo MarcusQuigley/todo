@@ -5,11 +5,13 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	//"github.com/stretchr/testify/assert"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetAllTodos(t *testing.T) {
-	want := `[{"id":1,"description":"first todo","is_completed":true}]`
+	want := `[{"id":1,"description":"first todo","is_completed":true},{"id":2,"description":"second todo","is_completed":false}]
+`
 	r := httptest.NewRequest(http.MethodGet, "/todos", nil)
 	w := httptest.NewRecorder()
 	GetAllTodos(w, r)
@@ -18,12 +20,8 @@ func TestGetAllTodos(t *testing.T) {
 		t.Fatalf("unexpected while reading body: %v", e)
 	}
 	w.Result().Body.Close()
-	//assert.Equal(t, string(got), want)
-	if string(got) != want {
-		t.Errorf("got %q want %q", got, want)
-	}
+	assert.Equal(t, want, string(got))
 }
 
 func TestGetTodoById(t *testing.T) {
-	// for Task 2, write here the solution
 }
