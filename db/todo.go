@@ -6,12 +6,19 @@ import (
 	"todoapp/models"
 )
 
+const SqlSelectAllTodos = "SELECT id, description, is_completed FROM todos"
+
 func GetAll(db *sql.DB) ([]models.Todo, error) {
-	rows, _ := db.Query("SELECT id, description, is_completed FROM todos")
+	rows, _ := db.Query(SqlSelectAllTodos)
 	defer rows.Close()
-	return []models.Todo{
-		models.NewTodo(1, "first todo", false),
-		models.NewTodo(2, "second todo", true),
-	}, nil
-	//return nil, nil
+	var todos []models.Todo
+	for rows.Next() {
+		var td models.Todo
+		e := rows.Scan(&td.Id, &td.Description, &td.IsCompleted)
+		if e != nil {
+			continue
+		}
+		todos = append(todos, td)
+	}
+	return todos, nil
 }
