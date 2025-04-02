@@ -3,21 +3,26 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"todoapp/models"
 )
 
-type Todo struct {
-	Id          int    `json:"id"`
-	Description string `json:"description"`
-	IsCompleted bool   `json:"is_completed"`
+type TodoHandler struct {
+	todos []models.Todo
 }
 
-func GetAllTodos(w http.ResponseWriter, r *http.Request) {
-	todos := []Todo{
-		{1, "first todo", true},
-		{2, "second todo", false},
-	}
+func NewTodoHandler(todos []models.Todo) *TodoHandler {
+	return &TodoHandler{todos}
+}
 
-	e := json.NewEncoder(w).Encode(todos)
+func (td *TodoHandler) GetAllTodos(w http.ResponseWriter, r *http.Request) {
+	e := json.NewEncoder(w).Encode(td.todos)
+	if e != nil {
+		panic(e)
+	}
+}
+
+func (td *TodoHandler) GetTodoById(w http.ResponseWriter, r *http.Request) {
+	e := json.NewEncoder(w).Encode(td.todos[0])
 	if e != nil {
 		panic(e)
 	}
