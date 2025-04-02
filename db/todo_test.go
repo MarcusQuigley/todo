@@ -24,3 +24,23 @@ func TestGetAll(t *testing.T) {
 		t.Errorf("there were unfulfilled expectations: %v", e)
 	}
 }
+
+func TestGetByID(t *testing.T) {
+	id := 1
+	db, mock, e := sqlmock.New()
+	if e != nil {
+		t.Fatalf("error %v not expected while opening a connection to a mock", e)
+	}
+	defer db.Close()
+	row := sqlmock.NewRows([]string{"id", "description", "is_completed"}).AddRow(1, "first todo", true)
+
+	mock.ExpectQuery("SELECT id, description, is_completed FROM todos where id = ?").WithArgs(id).WillReturnRows(row)
+	todo, e := GetByID(id, db)
+	if e != nil {
+		t.Fatalf("error %v not expected while calling GetByID", e)
+	}
+	assert.NotNil(t, todo)
+	if e = mock.ExpectationsWereMet(); e != nil {
+
+	}
+}
