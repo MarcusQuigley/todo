@@ -11,14 +11,32 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type repoMock struct {
+	fnGetAll  func() ([]models.Todo, error)
+	fnGetById func(id int) (models.Todo, error)
+}
+
+func (rm *repoMock) GetAll() ([]models.Todo, error) {
+	return rm.fnGetAll()
+}
+
+func (rm *repoMock) GetById(id int) (models.Todo, error) {
+	return rm.fnGetById(id)
+}
+
 func TestGetAllTodos(t *testing.T) {
 	want := `[{"id":1,"description":"first todo","is_completed":true},{"id":2,"description":"second todo","is_completed":false}]
 `
-	todos := []models.Todo{
-		models.NewTodo(1, "first todo", true),
-		models.NewTodo(2, "second todo", false),
+	mock := &repoMock{
+		fnGetAll: func() ([]models.Todo, error) {
+			return []models.Todo{
+				models.NewTodo(1, "first todo", true),
+				models.NewTodo(2, "second todo", false),
+			}, nil
+		},
 	}
-	th := NewTodoHandler(todos)
+
+	th := NewTodoHandler(mock)
 	r := httptest.NewRequest(http.MethodGet, "/todos", nil)
 	w := httptest.NewRecorder()
 	th.GetAllTodos(w, r)
@@ -27,25 +45,30 @@ func TestGetAllTodos(t *testing.T) {
 		t.Fatalf("unexpected while reading body: %v", e)
 	}
 	w.Result().Body.Close()
-	assert.Equal(t, want, string(got))
+	assert.Equal(t, string(got), want)
 }
 
 func TestGetTodoById(t *testing.T) {
 	want := `{"id":1,"description":"first todo","is_completed":true}
 `
-
-	todos := []models.Todo{
-		models.NewTodo(1, "first todo", true),
+	mock := &repoMock{
+		fnGetById: func(id int) (models.Todo, error) {
+			return models.NewTodo(id, "first todo", true), nil
+		},
 	}
-	th := NewTodoHandler(todos)
+
+	th := NewTodoHandler(mock)
 
 	r := httptest.NewRequest(http.MethodGet, "/todos/1", nil)
 	w := httptest.NewRecorder()
-	mux.SetURLVars(r, map[string]string{"id": "1"})
+
+	r = mux.SetURLVars(r, map[string]string{"id": "1"})
 	th.GetTodoById(w, r)
+
 	got, e := io.ReadAll(w.Result().Body)
 	if e != nil {
 		panic(e)
 	}
-	assert.Equal(t, want, string(got))
+	w.Result().Body.Close()
+	assert.Equal(t, string(got), want)
 }

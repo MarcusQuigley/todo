@@ -2,28 +2,45 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
-	"todoapp/models"
+	"todoapp/db"
 )
 
 type TodoHandler struct {
-	todos []models.Todo
+	rs db.IRepoService
 }
 
-func NewTodoHandler(todos []models.Todo) *TodoHandler {
-	return &TodoHandler{todos}
+func NewTodoHandler(service db.IRepoService) *TodoHandler {
+	return &TodoHandler{service}
 }
 
-func (td *TodoHandler) GetAllTodos(w http.ResponseWriter, r *http.Request) {
-	e := json.NewEncoder(w).Encode(td.todos)
+func (handler *TodoHandler) GetAllTodos(w http.ResponseWriter, r *http.Request) {
+	todos, e := handler.rs.GetAll()
 	if e != nil {
-		panic(e)
+		fmt.Println(e)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
+	e = json.NewEncoder(w).Encode(todos)
+	if e != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 }
 
-func (td *TodoHandler) GetTodoById(w http.ResponseWriter, r *http.Request) {
-	e := json.NewEncoder(w).Encode(td.todos[0])
+func (handler *TodoHandler) GetTodoById(w http.ResponseWriter, r *http.Request) {
+	todo, e := handler.rs.GetById(1)
 	if e != nil {
-		panic(e)
+		fmt.Println(e)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
+	e = json.NewEncoder(w).Encode(todo)
+	if e != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 }
